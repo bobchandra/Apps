@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Snake Game</title>
+    <style>
+        body { background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        canvas { background: #111; display: block; margin: auto; }
+    </style>
+</head>
+<body>
+    <div style="position: relative; display: inline-block;">
+        <div style="text-align: center; margin-bottom: 16px;">
+            <span style="color: #39ff14; font-size: 2.5rem; font-weight: bold; letter-spacing: 2px; text-shadow: 0 2px 8px #0f0;">Snakezilla!</span>
+        </div>
+        <canvas id="game" width="800" height="800"></canvas></div>
+        <div id="paused-sign" style="display:none; color:white; font-size:32px; text-align:center; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:100%;">Paused</div>
+    </div>
+    <style>
+        /* Add a sleek blue frame around the canvas */
+        .game-frame {
+            padding: 12px;
+            border: 4px solid #2196f3;
+            border-radius: 18px;
+            box-shadow: 0 0 24px #2196f388, 0 2px 8px #000a;
+            background: linear-gradient(135deg, #222 80%, #2196f322 100%);
+            display: inline-block;
+            position: relative;
+        }
+        /* Style for the cartoon snake overlay */
+        #dizzy-snake {
+            display: none;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 180px;
+            height: 180px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 10;
+        }
+    </style>
+    <!-- Cartoon dizzy snake SVG overlay -->
+    <svg id="dizzy-snake" viewBox="0 0 180 180">
+        <!-- Snake body -->
+        <ellipse cx="90" cy="110" rx="60" ry="30" fill="#7fdc5a" stroke="#3a7d2c" stroke-width="6"/>
+        <ellipse cx="90" cy="70" rx="40" ry="25" fill="#7fdc5a" stroke="#3a7d2c" stroke-width="6"/>
+        <!-- Snake head -->
+        <ellipse cx="90" cy="45" rx="28" ry="22" fill="#7fdc5a" stroke="#3a7d2c" stroke-width="6"/>
+        <!-- Dizzy eyes -->
+        <ellipse cx="80" cy="40" rx="7" ry="10" fill="#fff" stroke="#3a7d2c" stroke-width="2"/>
+        <ellipse cx="100" cy="40" rx="7" ry="10" fill="#fff" stroke="#3a7d2c" stroke-width="2"/>
+        <!-- Swirly pupils -->
+        <path d="M77 40 q3 5 6 0" stroke="#2196f3" stroke-width="2" fill="none"/>
+        <path d="M97 40 q3 5 6 0" stroke="#2196f3" stroke-width="2" fill="none"/>
+        <!-- Tongue -->
+        <path d="M90 62 Q90 70 95 75 Q90 73 85 75" stroke="#e53935" stroke-width="3" fill="none"/>
+        <!-- Bump stars -->
+        <g>
+            <polygon points="90,10 93,18 101,18 95,23 98,31 90,26 82,31 85,23 79,18 87,18" fill="#ffeb3b" stroke="#fbc02d" stroke-width="1"/>
+            <polygon points="120,25 122,29 127,29 123,32 125,36 120,33 115,36 117,32 113,29 118,29" fill="#ffeb3b" stroke="#fbc02d" stroke-width="1"/>
+            <polygon points="60,25 62,29 67,29 63,32 65,36 60,33 55,36 57,32 53,29 58,29" fill="#ffeb3b" stroke="#fbc02d" stroke-width="1"/>
+        </g>
+    </svg>
+    <script>
+        let paused = false;
+
+        const pausedSign = document.getElementById('paused-sign');
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+            if (gameOver) {
+                restartGame();
+            } else {
+                paused = !paused;
+                pausedSign.style.display = paused ? 'block' : 'none';
+            }
+            }
+        });
+
+        // Move the blue frame to wrap only the canvas and paused sign, not the title
+        window.addEventListener('DOMContentLoaded', () => {
+            const container = document.querySelector('body > div');
+            const titleDiv = container.querySelector('div');
+            const canvas = container.querySelector('canvas');
+            const pausedSign = document.getElementById('paused-sign');
+
+            // Create a new frame div
+            const frameDiv = document.createElement('div');
+            frameDiv.className = 'game-frame';
+            frameDiv.style.position = 'relative';
+            frameDiv.appendChild(canvas);
+            frameDiv.appendChild(pausedSign);
+
+            // Insert the frame after the title, inside the container
+            container.appendChild(frameDiv);
+        // Remove the old frame class from the container if present
+        container.classList.remove('game-frame');
+    });
+    </script>
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const gridSize = 20;
+        const tileCount = canvas.width / gridSize;
+
+        let snake, direction, food, gameOver;
+
+        function restartGame() {
+            snake = [{x: 10, y: 10}];
+            direction = {x: 1, y: 0};
+            food = {x: 5, y: 5};
+            gameOver = false;
+            paused = false;
+            pausedSign.style.display = 'none';
+            document.getElementById('dizzy-snake').style.display = 'none';
+            placeFood();
+            draw();
+        }
+
+        // Initialize game state
+        restartGame();
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw food
+            ctx.fillStyle = 'red';
+            ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
+
+            // Draw snake
+            ctx.fillStyle = 'lime';
+            snake.forEach(segment => {
+                ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
+            });
+
+            if (gameOver) {
+                ctx.fillStyle = 'white';
+                ctx.font = '30px Arial';
+                ctx.textAlign = 'center';
+                // ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2);
+                document.getElementById('dizzy-snake').style.display = 'block';
+            } else {
+                document.getElementById('dizzy-snake').style.display = 'none';
+            }
+        }
+
+        function update() {
+            if (gameOver || paused) return;
+
+            // Move snake
+            const head = {x: snake[0].x + direction.x, y: snake[0].y + direction.y};
+
+            // Wall collision
+            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+                gameOver = true;
+                return;
+            }
+
+            // Self collision
+            if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                gameOver = true;
+                return;
+            }
+
+            snake.unshift(head);
+
+            // Food collision
+            if (head.x === food.x && head.y === food.y) {
+                placeFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function placeFood() {
+            let newFood;
+            do {
+                newFood = {
+                    x: Math.floor(Math.random() * tileCount),
+                    y: Math.floor(Math.random() * tileCount)
+                };
+            } while (snake.some(segment => segment.x === newFood.x && segment.y === newFood.y));
+            food = newFood;
+        }
+
+        document.addEventListener('keydown', e => {
+            if (gameOver) return;
+            switch (e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    if (direction.y === 1) break;
+                    direction = {x: 0, y: -1};
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    if (direction.y === -1) break;
+                    direction = {x: 0, y: 1};
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    if (direction.x === 1) break;
+                    direction = {x: -1, y: 0};
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    if (direction.x === -1) break;
+                    direction = {x: 1, y: 0};
+                    break;
+            }
+        });
+
+        function gameLoop() {
+            update();
+            draw();
+            setTimeout(gameLoop, 100);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
