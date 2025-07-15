@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Black Mirror Episodes</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { text-align: center; }
+        ul { list-style: none; padding: 0; }
+        li { margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        select { margin-left: 10px; }
+        button { margin: 10px 0; padding: 10px; width: 100%; }
+        .hidden { display: none; }
+        @media (max-width: 600px) {
+            li { flex-direction: column; align-items: flex-start; }
+            select { margin-left: 0; margin-top: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Black Mirror Episodes</h1>
+    <button id="byRatingBtn">View by Rating</button>
+    <div id="episodeList"></div>
+    <div id="ratingView" class="hidden">
+        <button id="backBtn">Back to List</button>
+        <div id="greatList"></div>
+        <div id="goodList"></div>
+        <div id="belowList"></div>
+    </div>
+    <script>
+        const episodes = [
+            {season:1,episode:1,title:"The National Anthem",url:"https://www.netflix.com/search?q=The%20National%20Anthem"},
+            {season:1,episode:2,title:"Fifteen Million Merits",url:"https://www.netflix.com/search?q=Fifteen%20Million%20Merits"},
+            {season:1,episode:3,title:"The Entire History of You",url:"https://www.netflix.com/search?q=The%20Entire%20History%20of%20You"},
+            {season:2,episode:1,title:"Be Right Back",url:"https://www.netflix.com/search?q=Be%20Right%20Back"},
+            {season:2,episode:2,title:"White Bear",url:"https://www.netflix.com/search?q=White%20Bear"},
+            {season:2,episode:3,title:"The Waldo Moment",url:"https://www.netflix.com/search?q=The%20Waldo%20Moment"},
+            {season:2,episode:4,title:"White Christmas",url:"https://www.netflix.com/search?q=White%20Christmas"},
+            {season:3,episode:1,title:"Nosedive",url:"https://www.netflix.com/search?q=Nosedive"},
+            {season:3,episode:2,title:"Playtest",url:"https://www.netflix.com/search?q=Playtest"},
+            {season:3,episode:3,title:"Shut Up and Dance",url:"https://www.netflix.com/search?q=Shut%20Up%20and%20Dance"},
+            {season:3,episode:4,title:"San Junipero",url:"https://www.netflix.com/search?q=San%20Junipero"},
+            {season:3,episode:5,title:"Men Against Fire",url:"https://www.netflix.com/search?q=Men%20Against%20Fire"},
+            {season:3,episode:6,title:"Hated in the Nation",url:"https://www.netflix.com/search?q=Hated%20in%20the%20Nation"},
+            {season:4,episode:1,title:"USS Callister",url:"https://www.netflix.com/search?q=USS%20Callister"},
+            {season:4,episode:2,title:"Arkangel",url:"https://www.netflix.com/search?q=Arkangel"},
+            {season:4,episode:3,title:"Crocodile",url:"https://www.netflix.com/search?q=Crocodile"},
+            {season:4,episode:4,title:"Hang the DJ",url:"https://www.netflix.com/search?q=Hang%20the%20DJ"},
+            {season:4,episode:5,title:"Metalhead",url:"https://www.netflix.com/search?q=Metalhead"},
+            {season:4,episode:6,title:"Black Museum",url:"https://www.netflix.com/search?q=Black%20Museum"},
+            {season:5,episode:1,title:"Striking Vipers",url:"https://www.netflix.com/search?q=Striking%20Vipers"},
+            {season:5,episode:2,title:"Smithereens",url:"https://www.netflix.com/search?q=Smithereens"},
+            {season:5,episode:3,title:"Rachel, Jack and Ashley Too",url:"https://www.netflix.com/search?q=Rachel%2C%20Jack%20and%20Ashley%20Too"},
+            {season:6,episode:1,title:"Joan Is Awful",url:"https://www.netflix.com/search?q=Joan%20Is%20Awful"},
+            {season:6,episode:2,title:"Loch Henry",url:"https://www.netflix.com/search?q=Loch%20Henry"},
+            {season:6,episode:3,title:"Beyond the Sea",url:"https://www.netflix.com/search?q=Beyond%20the%20Sea"},
+            {season:6,episode:4,title:"Mazey Day",url:"https://www.netflix.com/search?q=Mazey%20Day"},
+            {season:6,episode:5,title:"Demon 79",url:"https://www.netflix.com/search?q=Demon%2079"},
+            {season:"Special",episode:1,title:"Bandersnatch",url:"https://www.netflix.com/search?q=Bandersnatch"}
+        ];
+
+        const episodeList = document.getElementById('episodeList');
+        const ratingView = document.getElementById('ratingView');
+        const byRatingBtn = document.getElementById('byRatingBtn');
+        const backBtn = document.getElementById('backBtn');
+        const greatList = document.getElementById('greatList');
+        const goodList = document.getElementById('goodList');
+        const belowList = document.getElementById('belowList');
+
+        function createEpisodeRow(ep){
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = ep.url;
+            a.textContent = ep.title;
+            a.target = '_blank';
+            const info = document.createElement('span');
+            info.textContent = ` (Season ${ep.season}, Episode ${ep.episode})`;
+            const select = document.createElement('select');
+            const options = ['','Great','Good','Below Average'];
+            options.forEach(opt => {
+                const o = document.createElement('option');
+                o.value = opt;
+                o.textContent = opt||'Rate';
+                select.appendChild(o);
+            });
+            select.addEventListener('change',updateCategories);
+            li.appendChild(a);
+            li.appendChild(info);
+            li.appendChild(select);
+            return li;
+        }
+
+        function init(){
+            const ul = document.createElement('ul');
+            episodes.forEach(ep => ul.appendChild(createEpisodeRow(ep)));
+            episodeList.appendChild(ul);
+        }
+
+        function updateCategories(){
+            greatList.innerHTML = '<h2>Great</h2><ul></ul>';
+            goodList.innerHTML = '<h2>Good</h2><ul></ul>';
+            belowList.innerHTML = '<h2>Below Average</h2><ul></ul>';
+            const greatUl = greatList.querySelector('ul');
+            const goodUl = goodList.querySelector('ul');
+            const belowUl = belowList.querySelector('ul');
+            episodeList.querySelectorAll('li').forEach(li => {
+                const select = li.querySelector('select');
+                const rating = select.value;
+                if(rating){
+                    const clone = li.cloneNode(true);
+                    clone.removeChild(clone.lastChild); // remove select
+                    if(rating==='Great') greatUl.appendChild(clone);
+                    if(rating==='Good') goodUl.appendChild(clone);
+                    if(rating==='Below Average') belowUl.appendChild(clone);
+                }
+            });
+        }
+
+        byRatingBtn.addEventListener('click', () => {
+            updateCategories();
+            episodeList.classList.add('hidden');
+            byRatingBtn.classList.add('hidden');
+            ratingView.classList.remove('hidden');
+        });
+
+        backBtn.addEventListener('click', () => {
+            ratingView.classList.add('hidden');
+            episodeList.classList.remove('hidden');
+            byRatingBtn.classList.remove('hidden');
+        });
+
+        window.onload = init;
+    </script>
+</body>
+</html>
