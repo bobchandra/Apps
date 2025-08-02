@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Black Mirror Episode Ranker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a1a, #000);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #333;
+            border-radius: 25px;
+            background: #222;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            border-color: #4ecdc4;
+            box-shadow: 0 0 15px rgba(78, 205, 196, 0.3);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(45deg, #4ecdc4, #45b7d1);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(78, 205, 196, 0.3);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(45deg, #666, #888);
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+        }
+
+        .episode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .episode-card {
+            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid #333;
+            transition: all 0.3s ease;
+            cursor: grab;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .episode-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+            border-color: #4ecdc4;
+        }
+
+        .episode-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .episode-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .episode-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #4ecdc4;
+            margin-bottom: 5px;
+        }
+
+        .episode-info {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .episode-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #ccc;
+            margin-bottom: 15px;
+        }
+
+        .episode-rating {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .stars {
+            display: flex;
+            gap: 5px;
+        }
+
+        .star {
+            font-size: 1.5rem;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .star.filled {
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .star:hover {
+            transform: scale(1.2);
+        }
+
+        .ranking-number {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: linear-gradient(45deg, #ff6b6b, #ff4757);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .ranked-list {
+            display: none;
+        }
+
+        .ranked-list.active {
+            display: block;
+        }
+
+        .ranked-item {
+            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .rank-position {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4ecdc4;
+            min-width: 40px;
+        }
+
+        .stats-panel {
+            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            border: 1px solid #333;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4ecdc4;
+        }
+
+        .stat-label {
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .season-filter {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .season-btn {
+            padding: 8px 16px;
+            border: 2px solid #333;
+            border-radius: 20px;
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .season-btn.active {
+            border-color: #4ecdc4;
+            color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.1);
+        }
+
+        .export-import {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .episode-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                max-width: none;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .drop-zone {
+            border: 2px dashed #4ecdc4;
+            background: rgba(78, 205, 196, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Black Mirror Episode Ranker</h1>
+            <p class="subtitle">Rate and rank your favorite Black Mirror episodes</p>
+        </header>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search episodes...">
+            </div>
+            <div class="view-toggle">
+                <button class="btn" id="gridViewBtn">Grid View</button>
+                <button class="btn secondary" id="listViewBtn">Ranked List</button>
+            </div>
+            <button class="btn" id="sortByRatingBtn">Sort by Rating</button>
+            <button class="btn secondary" id="resetBtn">Reset Rankings</button>
+        </div>
+
+        <div class="season-filter" id="seasonFilter">
+            <button class="season-btn active" data-season="all">All Seasons</button>
+        </div>
+
+        <div id="episodeGrid" class="episode-grid"></div>
+        <div id="rankedList" class="ranked-list"></div>
+
+        <div class="stats-panel">
+            <h3 style="text-align: center; margin-bottom: 20px; color: #4ecdc4;">Your Rating Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="avgRating">0.0</div>
+                    <div class="stat-label">Average Rating</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalRated">0</div>
+                    <div class="stat-label">Episodes Rated</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="topRated">-</div>
+                    <div class="stat-label">Highest Rated</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="favSeason">-</div>
+                    <div class="stat-label">Favorite Season</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="export-import">
+            <button class="btn" id="exportBtn">Export Rankings</button>
+            <button class="btn secondary" id="importBtn">Import Rankings</button>
+            <input type="file" id="importFile" accept=".json" style="display: none;">
+        </div>
+    </div>
+
+    <script>
+        const episodes = [
+            {
+                season: 1, episode: 1, title: "The National Anthem",
+                description: "A political satire about media manipulation and public spectacle when the Prime Minister faces an impossible demand.",
+                year: 2011, rating: 0
+            },
+            {
+                season: 1, episode: 2, title: "Fifteen Million Merits",
+                description: "In a world where people earn merits by cycling on exercise bikes, one man tries to help a woman escape the system.",
+                year: 2011, rating: 0
+            },
+            {
+                season: 1, episode: 3, title: "The Entire History of You",
+                description: "A technology that records everything you see and hear becomes the source of paranoia and relationship breakdown.",
+                year: 2011, rating: 0
+            },
+            {
+                season: 2, episode: 1, title: "Be Right Back",
+                description: "A woman uses AI technology to communicate with her deceased boyfriend, leading to unexpected consequences.",
+                year: 2013, rating: 0
+            },
+            {
+                season: 2, episode: 2, title: "White Bear",
+                description: "A woman wakes up with amnesia in a world where most people film her instead of helping her escape mysterious masked figures.",
+                year: 2013, rating: 0
+            },
+            {
+                season: 2, episode: 3, title: "The Waldo Moment",
+                description: "A blue cartoon bear used for crude comedy becomes a political candidate, commenting on modern democracy and media.",
+                year: 2013, rating: 0
+            },
+            {
+                season: 2, episode: 4, title: "White Christmas",
+                description: "Three interconnected stories explore digital consciousness, social blocking, and the dark side of Christmas technology.",
+                year: 2014, rating: 0
+            },
+            {
+                season: 3, episode: 1, title: "Nosedive",
+                description: "In a world where people rate each other, a woman desperately tries to boost her social credit score for a better life.",
+                year: 2016, rating: 0
+            },
+            {
+                season: 3, episode: 2, title: "Playtest",
+                description: "A cash-strapped gamer participates in an experimental horror game that taps directly into his fears and memories.",
+                year: 2016, rating: 0
+            },
+            {
+                season: 3, episode: 3, title: "Shut Up and Dance",
+                description: "Hackers use compromising information to force people into increasingly dangerous and humiliating situations.",
+                year: 2016, rating: 0
+            },
+            {
+                season: 3, episode: 4, title: "San Junipero",
+                description: "Two women meet in a nostalgic party town that may not be quite what it seems in this love story across time.",
+                year: 2016, rating: 0
+            },
+            {
+                season: 3, episode: 5, title: "Men Against Fire",
+                description: "Future soldiers use neural implants to fight against mutant enemies, but the truth about their mission is more complex.",
+                year: 2016, rating: 0
+            },
+            {
+                season: 3, episode: 6, title: "Hated in the Nation",
+                description: "When mechanical bees replace extinct real bees, they become the tool for a deadly social media-driven revenge plot.",
+                year: 2016, rating: 0
+            },
+            {
+                season: 4, episode: 1, title: "USS Callister",
+                description: "A brilliant but lonely programmer creates a virtual world where he plays god with digital copies of his coworkers.",
+                year: 2017, rating: 0
+            },
+            {
+                season: 4, episode: 2, title: "Arkangel",
+                description: "A mother uses an implant to monitor and protect her daughter, but the technology creates more problems than it solves.",
+                year: 2017, rating: 0
+            },
+            {
+                season: 4, episode: 3, title: "Crocodile",
+                description: "A woman's past catches up with her when she's forced to help investigate an accident using memory-reading technology.",
+                year: 2017, rating: 0
+            },
+            {
+                season: 4, episode: 4, title: "Hang the DJ",
+                description: "A dating app that determines relationship lengths leads two people to question the system controlling their love lives.",
+                year: 2017, rating: 0
+            },
+            {
+                season: 4, episode: 5, title: "Metalhead",
+                description: "In a post-apocalyptic world, a woman tries to survive while being hunted by relentless robotic dogs.",
+                year: 2017, rating: 0
+            },
+            {
+                season: 4, episode: 6, title: "Black Museum",
+                description: "A young woman visits a museum of criminal technology and learns about the dark history behind the exhibits.",
+                year: 2017, rating: 0
+            },
+            {
+                season: 5, episode: 1, title: "Striking Vipers",
+                description: "Two friends reconnect through a virtual reality fighting game that allows them to explore their relationship in new ways.",
+                year: 2019, rating: 0
+            },
+            {
+                season: 5, episode: 2, title: "Smithereens",
+                description: "A ride-share driver with a grudge against a social media company takes a hostage to get the CEO's attention.",
+                year: 2019, rating: 0
+            },
+            {
+                season: 5, episode: 3, title: "Rachel, Jack and Ashley Too",
+                description: "A lonely teen bonds with an AI version of her pop star idol, but the technology harbors dark secrets.",
+                year: 2019, rating: 0
+            },
+            {
+                season: 6, episode: 1, title: "Joan Is Awful",
+                description: "A woman discovers that her life is being adapted into a sensationalized streaming series without her consent.",
+                year: 2023, rating: 0
+            },
+            {
+                season: 6, episode: 2, title: "Loch Henry",
+                description: "A young couple documenting their hometown's dark past uncovers secrets that hit closer to home than expected.",
+                year: 2023, rating: 0
+            },
+            {
+                season: 6, episode: 3, title: "Beyond the Sea",
+                description: "In 1969, two astronauts on a long mission use synthetic bodies to live normal lives on Earth with their families.",
+                year: 2023, rating: 0
+            },
+            {
+                season: 6, episode: 4, title: "Mazey Day",
+                description: "A paparazzi photographer seeking a big scoop follows a troubled actress and uncovers something truly monstrous.",
+                year: 2023, rating: 0
+            },
+            {
+                season: 6, episode: 5, title: "Demon 79",
+                description: "In 1979 England, a meek sales assistant discovers she must help a demon complete a quota of murders to prevent the apocalypse.",
+                year: 2023, rating: 0
+            },
+            {
+                season: "Special", episode: 1, title: "Bandersnatch",
+                description: "An interactive film where a young programmer adapts a fantasy novel into a video game in 1984, with multiple possible endings.",
+                year: 2018, rating: 0
+            }
+        ];
+
+        let currentView = 'grid';
+        let filteredEpisodes = [...episodes];
+        let currentSeason = 'all';
+
+        // Load saved ratings from localStorage
+        function loadRatings() {
+            const saved = localStorage.getItem('blackMirrorRatings');
+            if (saved) {
+                const ratings = JSON.parse(saved);
+                episodes.forEach(ep => {
+                    const saved = ratings.find(r => r.season === ep.season && r.episode === ep.episode);
+                    if (saved) ep.rating = saved.rating;
+                });
+            }
+        }
+
+        // Save ratings to localStorage
+        function saveRatings() {
+            const ratings = episodes.map(ep => ({
+                season: ep.season,
+                episode: ep.episode,
+                title: ep.title,
+                rating: ep.rating
+            }));
+            localStorage.setItem('blackMirrorRatings', JSON.stringify(ratings));
+        }
+
+        // Create season filter buttons
+        function createSeasonFilter() {
+            const seasons = [...new Set(episodes.map(ep => ep.season))].sort((a, b) => {
+                if (a === "Special") return 1;
+                if (b === "Special") return -1;
+                return a - b;
+            });
+            
+            const seasonFilter = document.getElementById('seasonFilter');
+            seasons.forEach(season => {
+                const btn = document.createElement('button');
+                btn.className = 'season-btn';
+                btn.textContent = season === "Special" ? "Special" : `Season ${season}`;
+                btn.setAttribute('data-season', season);
+                btn.addEventListener('click', () => filterBySeason(season));
+                seasonFilter.appendChild(btn);
+            });
+        }
+
+        // Filter episodes by season
+        function filterBySeason(season) {
+            currentSeason = season;
+            document.querySelectorAll('.season-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-season') === season);
+            });
+            
+            filteredEpisodes = season === 'all' ? [...episodes] : episodes.filter(ep => ep.season == season);
+            applySearch();
+        }
+
+        // Create episode card
+        function createEpisodeCard(episode) {
+            const card = document.createElement('div');
+            card.className = 'episode-card';
+            card.draggable = true;
+            card.dataset.season = episode.season;
+            card.dataset.episode = episode.episode;
+
+            const rank = getRankPosition(episode);
+            
+            card.innerHTML = `
+                ${rank > 0 ? `<div class="ranking-number">${rank}</div>` : ''}
+                <div class="episode-header">
+                    <div>
+                        <div class="episode-title">${episode.title}</div>
+                        <div class="episode-info">Season ${episode.season}, Episode ${episode.episode} (${episode.year})</div>
+                    </div>
+                </div>
+                <div class="episode-description">${episode.description}</div>
+                <div class="episode-rating">
+                    <span>Rating:</span>
+                    <div class="stars" data-season="${episode.season}" data-episode="${episode.episode}">
+                        ${[1,2,3,4,5].map(i => `<span class="star ${i <= episode.rating ? 'filled' : ''}" data-rating="${i}">★</span>`).join('')}
+                    </div>
+                    <span class="rating-text">${episode.rating > 0 ? `${episode.rating}/5` : 'Not rated'}</span>
+                </div>
+            `;
+
+            // Add star rating functionality
+            const stars = card.querySelectorAll('.star');
+            stars.forEach(star => {
+                star.addEventListener('click', () => {
+                    const rating = parseInt(star.dataset.rating);
+                    episode.rating = rating;
+                    updateStars(card, rating);
+                    updateStats();
+                    saveRatings();
+                    if (currentView === 'list') showRankedList();
+                });
+                
+                star.addEventListener('mouseenter', () => {
+                    const rating = parseInt(star.dataset.rating);
+                    updateStars(card, rating, true);
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    updateStars(card, episode.rating);
+                });
+            });
+
+            // Add drag functionality
+            card.addEventListener('dragstart', (e) => {
+                card.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', JSON.stringify({season: episode.season, episode: episode.episode}));
+            });
+
+            card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+            });
+
+            return card;
+        }
+
+        // Update star display
+        function updateStars(card, rating, hover = false) {
+            const stars = card.querySelectorAll('.star');
+            stars.forEach((star, index) => {
+                star.classList.toggle('filled', index < rating);
+            });
+            if (!hover) {
+                const ratingText = card.querySelector('.rating-text');
+                ratingText.textContent = rating > 0 ? `${rating}/5` : 'Not rated';
+            }
+        }
+
+        // Get rank position of episode
+        function getRankPosition(episode) {
+            if (episode.rating === 0) return 0;
+            const sortedEpisodes = episodes
+                .filter(ep => ep.rating > 0)
+                .sort((a, b) => b.rating - a.rating || a.title.localeCompare(b.title));
+            return sortedEpisodes.findIndex(ep => ep.season === episode.season && ep.episode === episode.episode) + 1;
+        }
+
+        // Show grid view
+        function showGridView() {
+            currentView = 'grid';
+            document.getElementById('episodeGrid').style.display = 'grid';
+            document.getElementById('rankedList').classList.remove('active');
+            document.getElementById('gridViewBtn').classList.remove('secondary');
+            document.getElementById('listViewBtn').classList.add('secondary');
+            renderEpisodes();
+        }
+
+        // Show ranked list view
+        function showRankedList() {
+            currentView = 'list';
+            document.getElementById('episodeGrid').style.display = 'none';
+            document.getElementById('rankedList').classList.add('active');
+            document.getElementById('listViewBtn').classList.remove('secondary');
+            document.getElementById('gridViewBtn').classList.add('secondary');
+            
+            const rankedList = document.getElementById('rankedList');
+            const sortedEpisodes = episodes
+                .filter(ep => ep.rating > 0)
+                .sort((a, b) => b.rating - a.rating || a.title.localeCompare(b.title));
+            
+            rankedList.innerHTML = '<h3 style="text-align: center; margin-bottom: 20px; color: #4ecdc4;">Your Episode Rankings</h3>';
+            
+            if (sortedEpisodes.length === 0) {
+                rankedList.innerHTML += '<p style="text-align: center; color: #888;">Rate some episodes to see your rankings!</p>';
+                return;
+            }
+            
+            sortedEpisodes.forEach((episode, index) => {
+                const item = document.createElement('div');
+                item.className = 'ranked-item';
+                item.innerHTML = `
+                    <div class="rank-position">${index + 1}</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: bold; color: #4ecdc4;">${episode.title}</div>
+                        <div style="color: #888; font-size: 0.9rem;">Season ${episode.season}, Episode ${episode.episode}</div>
+                    </div>
+                    <div class="stars">
+                        ${[1,2,3,4,5].map(i => `<span class="star ${i <= episode.rating ? 'filled' : ''}">★</span>`).join('')}
+                    </div>
+                `;
+                rankedList.appendChild(item);
+            });
+        }
+
+        // Render episodes in grid
+        function renderEpisodes() {
+            const grid = document.getElementById('episodeGrid');
+            grid.innerHTML = '';
+            filteredEpisodes.forEach(episode => {
+                grid.appendChild(createEpisodeCard(episode));
+            });
+        }
+
+        // Apply search filter
+        function applySearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const baseEpisodes = currentSeason === 'all' ? episodes : episodes.filter(ep => ep.season == currentSeason);
+            
+            filteredEpisodes = baseEpisodes.filter(episode =>
+                episode.title.toLowerCase().includes(searchTerm) ||
+                episode.description.toLowerCase().includes(searchTerm)
+            );
+            
+            if (currentView === 'grid') {
+                renderEpisodes();
+            } else {
+                showRankedList();
+            }
+        }
+
+        // Sort by rating
+        function sortByRating() {
+            filteredEpisodes.sort((a, b) => b.rating - a.rating || a.title.localeCompare(b.title));
+            if (currentView === 'grid') {
+                renderEpisodes();
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            const ratedEpisodes = episodes.filter(ep => ep.rating > 0);
+            const totalRated = ratedEpisodes.length;
+            const avgRating = totalRated > 0 ? (ratedEpisodes.reduce((sum, ep) => sum + ep.rating, 0) / totalRated).toFixed(1) : '0.0';
+            
+            const topRated = ratedEpisodes
+                .filter(ep => ep.rating === Math.max(...ratedEpisodes.map(e => e.rating)))
+                .map(ep => ep.title)[0] || '-';
+            
+            // Calculate favorite season
+            const seasonRatings = {};
+            ratedEpisodes.forEach(ep => {
+                if (!seasonRatings[ep.season]) seasonRatings[ep.season] = [];
+                seasonRatings[ep.season].push(ep.rating);
+            });
+            
+            let favSeason = '-';
+            let highestAvg = 0;
+            Object.keys(seasonRatings).forEach(season => {
+                const avg = seasonRatings[season].reduce((sum, rating) => sum + rating, 0) / seasonRatings[season].length;
+                if (avg > highestAvg) {
+                    highestAvg = avg;
+                    favSeason = season === "Special" ? "Special" : `Season ${season}`;
+                }
+            });
+            
+            document.getElementById('avgRating').textContent = avgRating;
+            document.getElementById('totalRated').textContent = totalRated;
+            document.getElementById('topRated').textContent = topRated.length > 20 ? topRated.substring(0, 20) + '...' : topRated;
+            document.getElementById('favSeason').textContent = favSeason;
+        }
+
+        // Export rankings
+        function exportRankings() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                rankings: episodes.map(ep => ({
+                    season: ep.season,
+                    episode: ep.episode,
+                    title: ep.title,
+                    rating: ep.rating
+                }))
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'black-mirror-rankings.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Import rankings
+        function importRankings(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.rankings && Array.isArray(data.rankings)) {
+                        episodes.forEach(ep => {
+                            const imported = data.rankings.find(r => r.season === ep.season && r.episode === ep.episode);
+                            if (imported && imported.rating) {
+                                ep.rating = imported.rating;
+                            }
+                        });
+                        saveRatings();
+                        updateStats();
+                        if (currentView === 'grid') {
+                            renderEpisodes();
+                        } else {
+                            showRankedList();
+                        }
+                        alert('Rankings imported successfully!');
+                    }
+                } catch (error) {
+                    alert('Error importing file. Please make sure it\'s a valid rankings file.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Reset rankings
+        function resetRankings() {
+            if (confirm('Are you sure you want to reset all ratings? This cannot be undone.')) {
+                episodes.forEach(ep => ep.rating = 0);
+                localStorage.removeItem('blackMirrorRatings');
+                updateStats();
+                if (currentView === 'grid') {
+                    renderEpisodes();
+                } else {
+                    showRankedList();
+                }
+            }
+        }
+
+        // Initialize
+        function init() {
+            loadRatings();
+            createSeasonFilter();
+            updateStats();
+            showGridView();
+            
+            // Event listeners
+            document.getElementById('searchInput').addEventListener('input', applySearch);
+            document.getElementById('gridViewBtn').addEventListener('click', showGridView);
+            document.getElementById('listViewBtn').addEventListener('click', showRankedList);
+            document.getElementById('sortByRatingBtn').addEventListener('click', sortByRating);
+            document.getElementById('exportBtn').addEventListener('click', exportRankings);
+            document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+            document.getElementById('importFile').addEventListener('change', importRankings);
+            document.getElementById('resetBtn').addEventListener('click', resetRankings);
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html>
