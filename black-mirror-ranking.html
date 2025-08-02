@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Black Mirror Episode Ranker</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
         * {
             margin: 0;
             padding: 0;
@@ -12,38 +14,86 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a, #1a1a1a, #000);
-            color: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #000000;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(0, 100, 200, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(0, 150, 255, 0.02) 0%, transparent 50%);
+            color: #e8e8e8;
             min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 150, 255, 0.01) 2px,
+                rgba(0, 150, 255, 0.01) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
+            position: relative;
+            z-index: 2;
         }
 
         header {
             text-align: center;
             margin-bottom: 40px;
-            padding: 20px 0;
+            padding: 30px 0;
+            position: relative;
         }
 
         h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #ffffff;
+            text-shadow: 
+                0 0 10px rgba(0, 150, 255, 0.5),
+                0 0 20px rgba(0, 150, 255, 0.3),
+                0 0 40px rgba(0, 150, 255, 0.1);
+            letter-spacing: -2px;
+            position: relative;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+            animation: glitch-sweep 3s infinite;
+        }
+
+        @keyframes glitch-sweep {
+            0%, 90%, 100% { transform: translateX(-100%); }
+            95% { transform: translateX(100%); }
         }
 
         .subtitle {
-            font-size: 1.2rem;
-            color: #888;
+            font-size: 1.1rem;
+            color: #8A9BA8;
             margin-bottom: 30px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
         }
 
         .controls {
@@ -64,40 +114,79 @@
         .search-box input {
             width: 100%;
             padding: 12px 20px;
-            border: 2px solid #333;
-            border-radius: 25px;
-            background: #222;
-            color: #fff;
+            border: 1px solid #2A3441;
+            border-radius: 8px;
+            background: rgba(42, 52, 65, 0.4);
+            backdrop-filter: blur(10px);
+            color: #e8e8e8;
             font-size: 16px;
             outline: none;
             transition: all 0.3s ease;
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .search-box input:focus {
-            border-color: #4ecdc4;
-            box-shadow: 0 0 15px rgba(78, 205, 196, 0.3);
+            border-color: #0096FF;
+            box-shadow: 
+                0 0 0 3px rgba(0, 150, 255, 0.1),
+                inset 0 0 20px rgba(0, 150, 255, 0.05);
+            background: rgba(42, 52, 65, 0.6);
+        }
+
+        .search-box input::placeholder {
+            color: #6B7684;
         }
 
         .btn {
             padding: 12px 24px;
-            border: none;
-            border-radius: 25px;
-            background: linear-gradient(45deg, #4ecdc4, #45b7d1);
-            color: white;
-            font-size: 16px;
+            border: 1px solid #2A3441;
+            border-radius: 8px;
+            background: rgba(42, 52, 65, 0.4);
+            backdrop-filter: blur(10px);
+            color: #e8e8e8;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
             display: inline-block;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 150, 255, 0.1), transparent);
+            transition: left 0.5s ease;
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(78, 205, 196, 0.3);
+            border-color: #0096FF;
+            background: rgba(0, 150, 255, 0.1);
+            transform: translateY(-1px);
+            box-shadow: 
+                0 4px 20px rgba(0, 150, 255, 0.2),
+                0 0 0 1px rgba(0, 150, 255, 0.1);
+        }
+
+        .btn:hover::before {
+            left: 100%;
         }
 
         .btn.secondary {
-            background: linear-gradient(45deg, #666, #888);
+            background: rgba(22, 27, 34, 0.6);
+            border-color: #1e2329;
+        }
+
+        .btn.secondary:hover {
+            background: rgba(42, 52, 65, 0.4);
+            border-color: #2A3441;
         }
 
         .view-toggle {
@@ -113,52 +202,84 @@
         }
 
         .episode-card {
-            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
-            border-radius: 15px;
-            padding: 20px;
-            border: 1px solid #333;
-            transition: all 0.3s ease;
+            background: rgba(22, 27, 34, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #2A3441;
+            transition: all 0.4s ease;
             cursor: grab;
             position: relative;
             overflow: hidden;
         }
 
+        .episode-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(0, 150, 255, 0.5), 
+                transparent
+            );
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
         .episode-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
-            border-color: #4ecdc4;
+            transform: translateY(-4px);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(0, 150, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            border-color: #0096FF;
+            background: rgba(22, 27, 34, 0.9);
+        }
+
+        .episode-card:hover::before {
+            opacity: 1;
         }
 
         .episode-card.dragging {
-            opacity: 0.5;
+            opacity: 0.6;
             cursor: grabbing;
+            transform: rotate(2deg) scale(0.98);
         }
 
         .episode-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
 
         .episode-title {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: #4ecdc4;
-            margin-bottom: 5px;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: -0.5px;
         }
 
         .episode-info {
-            font-size: 0.9rem;
-            color: #888;
-            margin-bottom: 10px;
+            font-size: 0.85rem;
+            color: #6B7684;
+            margin-bottom: 12px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .episode-description {
             font-size: 0.95rem;
-            line-height: 1.5;
-            color: #ccc;
-            margin-bottom: 15px;
+            line-height: 1.6;
+            color: #B8BCC8;
+            margin-bottom: 18px;
+            font-weight: 400;
         }
 
         .episode-rating {
@@ -174,37 +295,49 @@
         }
 
         .star {
-            font-size: 1.5rem;
-            color: #333;
+            font-size: 1.4rem;
+            color: #2A3441;
             cursor: pointer;
             transition: all 0.2s ease;
             user-select: none;
+            filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.3));
         }
 
         .star.filled {
-            color: #ffd700;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            color: #0096FF;
+            text-shadow: 
+                0 0 8px rgba(0, 150, 255, 0.6),
+                0 0 16px rgba(0, 150, 255, 0.3);
         }
 
         .star:hover {
-            transform: scale(1.2);
+            transform: scale(1.15);
+            color: #0096FF;
+            text-shadow: 
+                0 0 8px rgba(0, 150, 255, 0.4),
+                0 0 16px rgba(0, 150, 255, 0.2);
         }
 
         .ranking-number {
             position: absolute;
-            top: -10px;
-            right: -10px;
-            background: linear-gradient(45deg, #ff6b6b, #ff4757);
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+            top: -8px;
+            right: -8px;
+            background: rgba(0, 150, 255, 0.9);
+            backdrop-filter: blur(10px);
+            color: #ffffff;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 1.1rem;
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+            font-weight: 600;
+            font-size: 0.9rem;
+            font-family: 'JetBrains Mono', monospace;
+            box-shadow: 
+                0 4px 12px rgba(0, 150, 255, 0.3),
+                0 0 0 1px rgba(0, 150, 255, 0.2);
+            border: 1px solid rgba(0, 150, 255, 0.3);
         }
 
         .ranked-list {
@@ -216,29 +349,55 @@
         }
 
         .ranked-item {
-            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+            background: rgba(22, 27, 34, 0.6);
+            backdrop-filter: blur(15px);
             border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 10px;
-            border: 1px solid #333;
+            padding: 18px;
+            margin-bottom: 12px;
+            border: 1px solid #2A3441;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .ranked-item:hover {
+            background: rgba(22, 27, 34, 0.8);
+            border-color: #0096FF;
+            transform: translateX(4px);
         }
 
         .rank-position {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #4ecdc4;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #0096FF;
             min-width: 40px;
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .stats-panel {
-            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 30px;
-            border: 1px solid #333;
+            background: rgba(22, 27, 34, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 40px;
+            border: 1px solid #2A3441;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stats-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(0, 150, 255, 0.5), 
+                transparent
+            );
         }
 
         .stats-grid {
@@ -252,38 +411,58 @@
         }
 
         .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #4ecdc4;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #0096FF;
+            font-family: 'JetBrains Mono', monospace;
+            text-shadow: 0 0 10px rgba(0, 150, 255, 0.3);
         }
 
         .stat-label {
-            color: #888;
-            margin-top: 5px;
+            color: #6B7684;
+            margin-top: 6px;
+            font-size: 0.9rem;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .season-filter {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             flex-wrap: wrap;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             justify-content: center;
         }
 
         .season-btn {
-            padding: 8px 16px;
-            border: 2px solid #333;
-            border-radius: 20px;
-            background: transparent;
-            color: #888;
+            padding: 10px 18px;
+            border: 1px solid #2A3441;
+            border-radius: 8px;
+            background: rgba(22, 27, 34, 0.4);
+            backdrop-filter: blur(10px);
+            color: #6B7684;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .season-btn.active {
-            border-color: #4ecdc4;
-            color: #4ecdc4;
-            background: rgba(78, 205, 196, 0.1);
+            border-color: #0096FF;
+            color: #0096FF;
+            background: rgba(0, 150, 255, 0.1);
+            box-shadow: 
+                0 0 0 1px rgba(0, 150, 255, 0.2),
+                inset 0 1px 0 rgba(0, 150, 255, 0.1);
+        }
+
+        .season-btn:hover:not(.active) {
+            border-color: #4A5568;
+            color: #B8BCC8;
+            background: rgba(42, 52, 65, 0.6);
         }
 
         .export-import {
@@ -310,13 +489,60 @@
             }
             
             h1 {
-                font-size: 2rem;
+                font-size: 2.5rem;
+            }
+            
+            .season-filter {
+                gap: 8px;
+            }
+            
+            .season-btn {
+                padding: 8px 14px;
+                font-size: 0.8rem;
             }
         }
 
         .drop-zone {
-            border: 2px dashed #4ecdc4;
-            background: rgba(78, 205, 196, 0.1);
+            border: 2px dashed #0096FF;
+            background: rgba(0, 150, 255, 0.05);
+        }
+
+        /* Glitch effect for title */
+        @keyframes glitch-text {
+            0%, 90%, 100% {
+                text-shadow: 
+                    0 0 10px rgba(0, 150, 255, 0.5),
+                    0 0 20px rgba(0, 150, 255, 0.3),
+                    0 0 40px rgba(0, 150, 255, 0.1);
+            }
+            95% {
+                text-shadow: 
+                    2px 0 0 rgba(0, 150, 255, 0.8),
+                    -2px 0 0 rgba(255, 255, 255, 0.8),
+                    0 0 10px rgba(0, 150, 255, 0.5);
+            }
+        }
+
+        h1 {
+            animation: glitch-text 4s infinite;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(22, 27, 34, 0.3);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 150, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 150, 255, 0.5);
         }
     </style>
 </head>
@@ -347,7 +573,7 @@
         <div id="rankedList" class="ranked-list"></div>
 
         <div class="stats-panel">
-            <h3 style="text-align: center; margin-bottom: 20px; color: #4ecdc4;">Your Rating Statistics</h3>
+            <h3 style="text-align: center; margin-bottom: 24px; color: #ffffff; font-family: 'JetBrains Mono', monospace; font-weight: 600; letter-spacing: -0.5px;">Your Rating Statistics</h3>
             <div class="stats-grid">
                 <div class="stat-item">
                     <div class="stat-value" id="avgRating">0.0</div>
@@ -683,7 +909,7 @@
                 .filter(ep => ep.rating > 0)
                 .sort((a, b) => b.rating - a.rating || a.title.localeCompare(b.title));
             
-            rankedList.innerHTML = '<h3 style="text-align: center; margin-bottom: 20px; color: #4ecdc4;">Your Episode Rankings</h3>';
+            rankedList.innerHTML = '<h3 style="text-align: center; margin-bottom: 24px; color: #ffffff; font-family: \'JetBrains Mono\', monospace; font-weight: 600; letter-spacing: -0.5px;">Your Episode Rankings</h3>';
             
             if (sortedEpisodes.length === 0) {
                 rankedList.innerHTML += '<p style="text-align: center; color: #888;">Rate some episodes to see your rankings!</p>';
@@ -696,8 +922,8 @@
                 item.innerHTML = `
                     <div class="rank-position">${index + 1}</div>
                     <div style="flex: 1;">
-                        <div style="font-weight: bold; color: #4ecdc4;">${episode.title}</div>
-                        <div style="color: #888; font-size: 0.9rem;">Season ${episode.season}, Episode ${episode.episode}</div>
+                        <div style="font-weight: 600; color: #ffffff; font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; letter-spacing: -0.5px;">${episode.title}</div>
+                        <div style="color: #6B7684; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">Season ${episode.season}, Episode ${episode.episode}</div>
                     </div>
                     <div class="stars">
                         ${[1,2,3,4,5].map(i => `<span class="star ${i <= episode.rating ? 'filled' : ''}">★</span>`).join('')}
